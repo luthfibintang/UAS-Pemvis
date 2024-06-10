@@ -1,21 +1,29 @@
+# library
 from customtkinter import *
 
+# idk to descibe this, basically this is the think you need to do
 main = CTk()
-main.title("Login Page")
+main.title("Registrasi Page")
 main.config(bg="#F4F6F9")
+
+#Main window that we use
 main_width = 841
 main_height = 600
-main.geometry(f"{main_width}x{main_height}")
+
+# Get the screen width and height (Monitor)
+screen_width = main.winfo_screenwidth()
+screen_height = main.winfo_screenheight()
+
+# Calculate the x and y coordinates to center the window
+x = (screen_width // 2) - (main_width // 2)
+y = (screen_height // 2) - (main_height // 2)
+
+# Set the geometry of the window to center it
+main.geometry(f"{main_width}x{main_height}+{x}+{y}")
 main.resizable(False, False)
 
 
-frame1 = CTkFrame(main,fg_color="#FFFFFF", bg_color="white", height= 340, width=265)
-
-pos_x = (main_width - frame1.winfo_reqwidth()) / 2
-pos_y = (main_height - frame1.winfo_reqheight()) / 2
-
-# Letakkan frame di tengah window secara horizontal
-frame1.place(x=pos_x, y=pos_y)
+frame1 = CTkFrame(main,fg_color="#FFFFFF", bg_color="white")
 
 title = CTkLabel(frame1,text="Registerasi",text_color="black",font=("",24,"bold"), )
 title.grid(row=0,column=0,sticky="w", pady=(28.47, 18), padx=30)
@@ -73,5 +81,7 @@ register1_lbl = CTkLabel(frame1,text="Sudah punya akun?",text_color="black",font
 register1_lbl.grid(row=13,column=0, sticky="w", padx=(150, 0))
 register1_lbl = CTkLabel(frame1,text=" Login",text_color="#4388F0",cursor="hand2",font=("",12))
 register1_lbl.grid(row=13,column=0, sticky="ne", pady=5, padx=(0, 170))
+
+frame1.pack(expand=True, anchor="center")
 
 main.mainloop()
