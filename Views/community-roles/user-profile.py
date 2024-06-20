@@ -1,9 +1,10 @@
 from customtkinter import *
-from tkinter import Canvas, Menu
-from spinBox import FloatSpinbox
+from tkinter import Canvas, Menu, messagebox
 from CTkTable import *
 import os
 from PIL import Image
+sys.path.insert(1, 'C://Dev//UPJ//pemvis//uas')
+import pengadubcknd
 
 # Function to open detail
 def browse():
@@ -11,12 +12,30 @@ def browse():
 
 # Function to handle logout
 def logout():
-    main.destroy()
-    os.system("python views/auth/login.py")
+    confirmation = messagebox.askyesno("Logout", "Apakah Anda yakin ingin logout?")
+    if confirmation:
+        main.destroy()
+        os.system("python views/auth/login.py")
+
+if len(sys.argv) > 1:
+    user_id = sys.argv[1]
+    user_name = pengadubcknd.get_user_name(user_id)
+else:
+    user_id = None
+    user_name = "User"
 
 # Function to handle profile
-def profile():
-    print("Profile clicked!")
+def open_profile():
+    main.destroy()  # Close the current window
+    os.system(f"python Views/community-roles/user-profile.py {user_id}")
+
+def open_pengaduan():
+    main.destroy()  # Close the current window
+    os.system(f"python Views/community-roles/list-pengaduan.py {user_id}")
+
+def open_dashboard():
+    main.destroy()  # Close the current window
+    os.system(f"python Views/community-roles/dashboard-community.py {user_id}")
     
 def change_profile():
     print("Change Profile clicked")
@@ -49,29 +68,32 @@ navbar.place(x=0, y=0)
 appName_lbl = CTkLabel(navbar, text="SuaraKu", text_color="white", font=("PlusJakartaSans", 27, "bold"))
 appName_lbl.place(x=27, y=27)
 
-dashboard_lbl = CTkLabel(navbar, text="Dashboard", text_color="white", font=("PlusJakartaSans", 18))
+dashboard_lbl = CTkLabel(navbar, text="Dashboard", text_color="white", font=("PlusJakartaSans", 18), cursor="hand2")
 dashboard_lbl.place(x=323, y=34)
+dashboard_lbl.bind("<Button-1>", lambda e: open_dashboard())
 
-pengaduan_lbl = CTkLabel(navbar, text="Pengaduan", text_color="white", font=("PlusJakartaSans", 18))
+pengaduan_lbl = CTkLabel(navbar, text="Pengaduan", text_color="white", font=("PlusJakartaSans", 18), cursor="hand2")
 pengaduan_lbl.place(x=482, y=34)
+pengaduan_lbl.bind("<Button-1>", lambda e: open_pengaduan())
 
 canvas = Canvas(navbar, width=151.5)
 canvas.create_rectangle(547, 2, 607, 2, width=3)
 canvas.place(x=589, y=82)
 
-user_lbl = CTkLabel(navbar, text="User", text_color="white", font=("PlusJakartaSans", 18))
+user_lbl = CTkLabel(navbar, text="User", text_color="white", font=("PlusJakartaSans", 18), cursor="hand2")
 user_lbl.place(x=645, y=34)
+user_lbl.bind("<Button-1>", lambda e: open_profile())
 
 profile_img = CTkImage(dark_image=Image.open("Assets/frame0/image_1.png"), size=(45, 45))
 profile_lab = CTkLabel(navbar, image=profile_img, text="")
 profile_lab.place(x=834, y=23.25)
 
-username_lbl = CTkLabel(navbar, text="Hi, Masyarakat", text_color="white", font=("PlusJakartaSans", 18))
-username_lbl.place(x=887, y=33)
+username_lbl = CTkLabel(navbar, text=f"Hi, {user_name}", text_color="white", font=("PlusJakartaSans", 18))
+username_lbl.place(x=883, y=33)
 
 # Dropdown menu
 menu = Menu(main, tearoff=0)
-menu.add_command(label="Profile", command=profile)
+menu.add_command(label="Profile", command=open_profile)
 menu.add_command(label="Logout", command=logout)
 
 # Function to show the dropdown menu
