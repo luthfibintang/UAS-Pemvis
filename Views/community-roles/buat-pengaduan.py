@@ -1,29 +1,80 @@
 from customtkinter import *
-from tkinter import Canvas, Menu
-from spinBox import FloatSpinbox
-from CTkTable import *
-import os
+import tkinter as tk
+from tkinter import filedialog, Menu, Canvas, messagebox
 from PIL import Image
-
-# Function to open detail
-def open_detail():
-    print("Detail button clicked!")
+import os
+import sys
+from datetime import datetime
+sys.path.insert(1, 'C://Dev//UPJ//pemvis//uas')
+import pengadubcknd
+import shutil
 
 # Function to handle logout
 def logout():
-    main.destroy()
-    os.system("python views/auth/login.py")
+    confirmation = messagebox.askyesno("Logout", "Apakah Anda yakin ingin logout?")
+    if confirmation:
+        main.destroy()
+        os.system("python views/auth/login.py")
 
-# Function to handle profile
-def profile():
-    print("Profile clicked!")
+if len(sys.argv) > 1:
+    user_id = sys.argv[1]
+    user_name = pengadubcknd.get_user_name(user_id)
+else:
+    user_id = None
+    user_name = "User"
 
 def back_button():
     main.destroy()
-    os.system("python views/community-roles/list-pengaduan.py")
+    os.system(f"python views/community-roles/list-pengaduan.py {user_id}")
+
+def open_profile():
+    main.destroy()
+    os.system(f"python Views/community-roles/user-profile.py {user_id}")
+
+def open_pengaduan():
+    main.destroy()
+    os.system(f"python Views/community-roles/list-pengaduan.py {user_id}")
+
+def open_dashboard():
+    main.destroy()
+    os.system(f"python Views/community-roles/dashboard-community.py {user_id}")
+
+def browse_file():
+    file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg;*.jpeg;*.png")])
+    if file_path:
+        filename = os.path.basename(file_path)
+        strfilename.set(filename)
+        global uploaded_file_path
+        uploaded_file_path = file_path
+
+def entry_clicked(event):
+    browse_file()
+
+def submit_pengaduan():
+    title = title_entry.get()
+    description = reportDesc_txtb.get("1.0", tk.END).strip()
+    date_reported = datetime.now().strftime('%Y-%m-%d')
+    last_updated = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+    attachment = strfilename.get()
+    status = "Belum Diverifikasi"
+
+    new_filename = None
+    if 'uploaded_file_path' in globals() and uploaded_file_path:
+        file_extension = attachment
+        new_filename = f"{last_updated.replace(':', '-')}{file_extension}"
+        storage_path = f"storage/img/{user_id}"
+        if not os.path.exists(storage_path):
+            os.makedirs(storage_path)
+        destination_path = os.path.join(storage_path, new_filename)
+        shutil.copy(uploaded_file_path, destination_path)
+
+    pengadubcknd.submit_pengaduan(user_id, date_reported, title, description, new_filename, status, last_updated)
+    messagebox.showinfo("Pengaduan Berhasil", "Pengaduan berhasil dibuat")
+    main.destroy()
+    os.system(f"python views/community-roles/list-pengaduan.py {user_id}")
 
 main = CTk()
-main.title("List Pengaduan")
+main.title("Tulis Pengaduan")
 main.config(bg="#F4F6F9")
 
 # Main window dimensions
@@ -50,29 +101,32 @@ navbar.place(x=0, y=0)
 appName_lbl = CTkLabel(navbar, text="SuaraKu", text_color="white", font=("PlusJakartaSans", 27, "bold"))
 appName_lbl.place(x=27, y=27)
 
-dashboard_lbl = CTkLabel(navbar, text="Dashboard", text_color="white", font=("PlusJakartaSans", 18))
+dashboard_lbl = CTkLabel(navbar, text="Dashboard", text_color="white", font=("PlusJakartaSans", 18), cursor="hand2")
 dashboard_lbl.place(x=323, y=34)
+dashboard_lbl.bind("<Button-1>", lambda e: open_dashboard())
 
-pengaduan_lbl = CTkLabel(navbar, text="Pengaduan", text_color="white", font=("PlusJakartaSans", 18))
+pengaduan_lbl = CTkLabel(navbar, text="Pengaduan", text_color="white", font=("PlusJakartaSans", 18), cursor="hand2")
 pengaduan_lbl.place(x=482, y=34)
+pengaduan_lbl.bind("<Button-1>", lambda e: open_pengaduan())
 
 canvas = Canvas(navbar, width=151.5)
 canvas.create_rectangle(455, 2, 607, 2, width=3)
 canvas.place(x=450, y=82)
 
-user_lbl = CTkLabel(navbar, text="User", text_color="white", font=("PlusJakartaSans", 18))
+user_lbl = CTkLabel(navbar, text="User", text_color="white", font=("PlusJakartaSans", 18), cursor="hand2")
 user_lbl.place(x=645, y=34)
+user_lbl.bind("<Button-1>", lambda e: open_profile())
 
 profile_img = CTkImage(dark_image=Image.open("Assets/frame0/image_1.png"), size=(45, 45))
 profile_lab = CTkLabel(navbar, image=profile_img, text="")
 profile_lab.place(x=830, y=23.25)
 
-username_lbl = CTkLabel(navbar, text="Hi, Marcus Miles", text_color="white", font=("PlusJakartaSans", 18))
+username_lbl = CTkLabel(navbar, text=f"Hi, {user_name}", text_color="white", font=("PlusJakartaSans", 18))
 username_lbl.place(x=883, y=33)
 
 # Dropdown menu
 menu = Menu(main, tearoff=0)
-menu.add_command(label="Profile", command=profile)
+menu.add_command(label="Profile", command=open_profile)
 menu.add_command(label="Logout", command=logout)
 
 # Function to show the dropdown menu
@@ -116,18 +170,22 @@ reportDate_lbl = CTkLabel(content, text="Tanggal Laporan", text_color="black", f
 reportDate_lbl.place(x=69 - 41.25, y=520 - 250.5)
 
 reportDate_entry = CTkEntry(content, text_color="black", fg_color="#FDFDFF", border_color="#b5b5b5", border_width=1, font=("", 15), width=938.25, height=35)
+reportDate_entry.insert(0, datetime.now().strftime('%Y-%m-%d'))
+reportDate_entry.configure(state=DISABLED)
 reportDate_entry.place(x=69 - 41.25, y=546 - 250.5)
 
-complaintProv_lbl = CTkLabel(content, text="Foto Profile", text_color="black", font=("PlusJakartaSans", 13))
+complaintProv_lbl = CTkLabel(content, text="Bukti Pengaduan (Opsional)", text_color="black", font=("PlusJakartaSans", 13))
 complaintProv_lbl.place(x=69 - 41.25, y=593 - 250.5)
 
-complaintProv_entry = CTkEntry(content, text_color="black", fg_color="#FDFDFF", border_color="#b5b5b5", border_width=1, font=("", 15), width=798.25, height=35, state=DISABLED)
+strfilename = tk.StringVar()
+complaintProv_entry = CTkEntry(content, text_color="black", fg_color="#FDFDFF", border_color="#b5b5b5", border_width=1, font=("", 15), width=798.25, height=35, textvariable=strfilename, state=DISABLED)
 complaintProv_entry.place(x=69 - 41.25, y=621 - 250.5)
+complaintProv_entry.bind("<Button-1>", entry_clicked)
 
-complaintProv_btn = CTkButton(content, text="Browse", width=150, height=35, fg_color="#888888", hover_color="#AEAEAE", font=("PlusJakartaSans", 15), cursor="hand2")
+complaintProv_btn = CTkButton(content, text="Browse", width=150, height=35, fg_color="#888888", hover_color="#AEAEAE", font=("PlusJakartaSans", 15), cursor="hand2", command=browse_file)
 complaintProv_btn.place(x=855.75 - 41.25, y=621 - 250.5)
 
-addPengaduan_btn = CTkButton(content, text="Kirim Pengaduan", width=156.75, height=42, fg_color="#6777EF", hover_color="#424D98", font=("PlusJakartaSans", 15), cursor="hand2")
+addPengaduan_btn = CTkButton(content, text="Kirim Pengaduan", width=156.75, height=42, fg_color="#6777EF", hover_color="#424D98", font=("PlusJakartaSans", 15), cursor="hand2", command=submit_pengaduan)
 addPengaduan_btn.place(x=849 - 41.25, y=677.25 - 250.5)
 
 main.mainloop()
